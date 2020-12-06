@@ -296,18 +296,10 @@ export function isComplete(game: Game): boolean {
   return game.shapes.every((shape) => shape.positions);
 }
 
-function shuffle<T>(array: T[]) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
 export function simulate(game: Game): Game {
   const newGame = _.cloneDeep(game) as Game;
 
   const unplacedShapes = newGame.shapes.filter((shape) => !shape.positions);
-  // shuffle(unplacedShapes);
 
   for (let shape of unplacedShapes) {
     const actions = getActionsForShape(newGame, shape.shape);
