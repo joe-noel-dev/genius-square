@@ -123,6 +123,9 @@ export class Solver {
     intervalMs: number,
     onUpdate: (game: Game) => void
   ): Promise<Game> {
+    if (this.intervalId !== 0) {
+      this.stop();
+    }
     return new Promise((resolve) => {
       this.intervalId = setInterval(() => this.runSimulation(), intervalMs);
       this.onComplete = resolve;
