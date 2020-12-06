@@ -5,24 +5,25 @@ import {
   applyAction,
   simulate,
   gameStats,
+  isComplete,
 } from '../game/game';
 import _ from 'lodash';
 import assert from 'assert';
 
-export interface Node {
+interface GameNode {
   game: Game;
   score: number;
   numSimulations: number;
-  children: Node[];
-  parent?: Node;
+  children: GameNode[];
+  parent?: GameNode;
   action?: Action;
 }
 
-function isLeaf(node: Node): boolean {
+function isLeaf(node: GameNode): boolean {
   return node.children.length === 0;
 }
 
-function valueForNode(node: Node): number {
+function valueForNode(node: GameNode): number {
   if (node.numSimulations === 0) return Infinity;
   const explorationConstant = 1; // Math.SQRT2;
   return (
@@ -32,9 +33,9 @@ function valueForNode(node: Node): number {
   );
 }
 
-function bestChild(node: Node): Node {
+function bestChild(node: GameNode): GameNode {
   assert(node.children.length > 0);
-  let best: Node = node.children[0];
+  let best: GameNode = node.children[0];
   let bestValue = valueForNode(node.children[0]);
 
   node.children.forEach((child) => {
@@ -48,11 +49,11 @@ function bestChild(node: Node): Node {
   return best;
 }
 
-function findCandidate(node: Node): Node {
+function findCandidate(node: GameNode): GameNode {
   return isLeaf(node) ? node : findCandidate(bestChild(node));
 }
 
-function addNewNodes(parent: Node) {
+function addNewNodes(parent: GameNode) {
   const actions = getValidActions(parent.game);
   actions.forEach((action) => {
     const newGame = _.cloneDeep(parent.game) as Game;
@@ -68,7 +69,7 @@ function addNewNodes(parent: Node) {
   });
 }
 
-function applyScore(node: Node, score: number) {
+function applyScore(node: GameNode, score: number) {
   node.score += score;
   node.numSimulations++;
   if (node.parent) {
@@ -76,12 +77,11 @@ function applyScore(node: Node, score: number) {
   }
 }
 
-function rollout(node: Node, onSolution: (game: Game) => void): Game {
+function rollout(node: GameNode): Game {
   const result = simulate(node.game);
   const stats = gameStats(result);
 
   if (stats.complete) {
-    onSolution(result);
     console.log('Found solution');
   }
 
@@ -95,30 +95,60 @@ function rollout(node: Node, onSolution: (game: Game) => void): Game {
   return result;
 }
 
-export function generateTree(game: Game): Node {
-  return {
-    game,
-    score: 0,
-    numSimulations: 0,
-    children: [],
-    parent: undefined,
-    action: undefined,
-  };
-}
+export class Solver {
+  game: Game;
+  root: GameNode;
+  onUpdate: (game: Game) => void;
+  intervalId: number = 0;
+  onComplete?: (game: Game) => void;
 
-export function solve(root: Node, onSolution: (game: Game) => void) {
-  const candidate = findCandidate(root);
-
-  let incompleteSolution = candidate.game;
-
-  if (candidate.numSimulations === 0) {
-    incompleteSolution = rollout(candidate, onSolution);
-  } else {
-    addNewNodes(candidate);
-    if (candidate.children.length) {
-      incompleteSolution = rollout(candidate.children[0], onSolution);
-    }
+  constructor(game: Game, onUpdate: (game: Game) => void) {
+    this.game = game;
+    this.root = {
+      game: this.game,
+      score: 0,
+      numSimulations: 0,
+      children: [],
+      parent: undefined,
+      action: undefined,
+    };
+    this.onUpdate = onUpdate;
   }
 
-  return incompleteSolution;
+  stop() {
+    clearInterval(this.intervalId);
+    this.intervalId = 0;
+  }
+
+  async solve(intervalMs: number): Promise<Game> {
+    return new Promise((resolve) => {
+      this.intervalId = setInterval(() => this.runSimulation(), intervalMs);
+      this.onComplete = resolve;
+    });
+  }
+
+  runSimulation() {
+    const candidate = findCandidate(this.root);
+
+    let solution = candidate.game;
+
+    if (candidate.numSimulations === 0) {
+      solution = rollout(candidate);
+    } else {
+      addNewNodes(candidate);
+      if (candidate.children.length) {
+        solution = rollout(candidate.children[0]);
+      }
+    }
+
+    if (isComplete(solution)) {
+      this.stop();
+
+      if (this.onComplete) {
+        this.onComplete(solution);
+      }
+    } else {
+      this.onUpdate(solution);
+    }
+  }
 }

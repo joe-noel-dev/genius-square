@@ -292,6 +292,10 @@ export function gameStats(game: Game): GameStats {
   return stats;
 }
 
+export function isComplete(game: Game): boolean {
+  return game.shapes.every((shape) => shape.positions);
+}
+
 function shuffle<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
