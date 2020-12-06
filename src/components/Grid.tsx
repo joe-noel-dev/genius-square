@@ -3,9 +3,7 @@ import styled from 'styled-components';
 import {GameContext} from '../context/game-context';
 import {Row} from './Row';
 
-const Container = styled.div`
-  margin: 1rem;
-`;
+const Container = styled.div``;
 
 interface GridProps {}
 

@@ -98,11 +98,11 @@ function rollout(node: GameNode): Game {
 export class Solver {
   game: Game;
   root: GameNode;
-  onUpdate: (game: Game) => void;
+  onUpdate?: (game: Game) => void;
   intervalId: number = 0;
   onComplete?: (game: Game) => void;
 
-  constructor(game: Game, onUpdate: (game: Game) => void) {
+  constructor(game: Game) {
     this.game = game;
     this.root = {
       game: this.game,
@@ -112,7 +112,6 @@ export class Solver {
       parent: undefined,
       action: undefined,
     };
-    this.onUpdate = onUpdate;
   }
 
   stop() {
@@ -120,14 +119,21 @@ export class Solver {
     this.intervalId = 0;
   }
 
-  async solve(intervalMs: number): Promise<Game> {
+  async solve(
+    intervalMs: number,
+    onUpdate: (game: Game) => void
+  ): Promise<Game> {
     return new Promise((resolve) => {
       this.intervalId = setInterval(() => this.runSimulation(), intervalMs);
       this.onComplete = resolve;
+      this.onUpdate = onUpdate;
     });
   }
 
   runSimulation() {
+    // Monte Carlo Tree Search
+    // https://en.wikipedia.org/wiki/Monte_Carlo_tree_search
+
     const candidate = findCandidate(this.root);
 
     let solution = candidate.game;
@@ -143,12 +149,17 @@ export class Solver {
 
     if (isComplete(solution)) {
       this.stop();
-
-      if (this.onComplete) {
-        this.onComplete(solution);
-      }
+      this.notifyComplete(solution);
     } else {
-      this.onUpdate(solution);
+      this.notifyUpdate(solution);
     }
+  }
+
+  notifyComplete(solution: Game) {
+    if (this.onComplete) this.onComplete(solution);
+  }
+
+  notifyUpdate(game: Game) {
+    if (this.onUpdate) this.onUpdate(game);
   }
 }
