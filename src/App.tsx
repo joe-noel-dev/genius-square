@@ -1,24 +1,29 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useEffect, useState} from 'react';
+import {Grid} from './components/Grid';
+import {Game, generateGame} from './game/game';
+import {generateTree, Node, solve} from './tree/tree';
 import './App.css';
 
 function App() {
+  const [game, setGame] = useState<Game>(generateGame());
+  const [tree] = useState<Node>(generateTree(game));
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const currentSolution = solve(tree, (solution) => {
+        setGame(solution);
+        clearInterval(intervalId);
+      });
+
+      setGame(currentSolution);
+    }, 10);
+
+    return () => clearInterval(intervalId);
+  }, [tree]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Grid game={game} />
     </div>
   );
 }
