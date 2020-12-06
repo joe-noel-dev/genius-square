@@ -1,10 +1,9 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import styled from 'styled-components';
-import {Game} from '../game/game';
+import {GameContext} from '../context/game-context';
 import {Cell} from './Cell';
 
 interface RowProps {
-  game: Game;
   rowIndex: number;
 }
 
@@ -13,15 +12,11 @@ const Container = styled.div`
 `;
 
 export const Row = (props: RowProps) => {
+  const game = useContext(GameContext);
   return (
     <Container>
-      {[...Array(props.game.width)].map((_, index) => (
-        <Cell
-          key={index}
-          columnIndex={index}
-          rowIndex={props.rowIndex}
-          game={props.game}
-        />
+      {[...Array(game.width)].map((_, index) => (
+        <Cell key={index} columnIndex={index} rowIndex={props.rowIndex} />
       ))}
     </Container>
   );

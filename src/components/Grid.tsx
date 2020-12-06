@@ -1,21 +1,20 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import styled from 'styled-components';
-import {Game} from '../game/game';
+import {GameContext} from '../context/game-context';
 import {Row} from './Row';
 
 const Container = styled.div`
   margin: 1rem;
 `;
 
-interface GridProps {
-  game: Game;
-}
+interface GridProps {}
 
 export const Grid = (props: GridProps) => {
+  const game = useContext(GameContext);
   return (
     <Container>
-      {[...Array(props.game.height)].map((_, index) => (
-        <Row key={index} game={props.game} rowIndex={index} />
+      {[...Array(game.height)].map((_, index) => (
+        <Row key={index} rowIndex={index} />
       ))}
     </Container>
   );

@@ -3,6 +3,7 @@ import {Grid} from './components/Grid';
 import {Game, generateGame} from './game/game';
 import {generateTree, Node, solve} from './tree/tree';
 import './App.css';
+import {GameContext} from './context/game-context';
 
 function App() {
   const [game, setGame] = useState<Game>(generateGame());
@@ -23,7 +24,9 @@ function App() {
 
   return (
     <div className="App">
-      <Grid game={game} />
+      <GameContext.Provider value={game}>
+        <Grid />
+      </GameContext.Provider>
     </div>
   );
 }

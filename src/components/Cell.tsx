@@ -1,12 +1,12 @@
-import {colourForPosition, containsToken, Game} from '../game/game';
+import {colourForPosition, containsToken} from '../game/game';
 
-import React from 'react';
+import React, {useContext} from 'react';
 import styled, {css} from 'styled-components';
+import {GameContext} from '../context/game-context';
 
 interface CellProps {
   rowIndex: number;
   columnIndex: number;
-  game: Game;
 }
 
 const borderStyle = css`3px solid black`;
@@ -48,9 +48,9 @@ export const Cell = (props: CellProps) => {
     x: props.columnIndex,
     y: props.rowIndex,
   };
-
-  const hasToken = containsToken(position, props.game);
-  let colour = colourForPosition(position, props.game);
+  const game = useContext(GameContext);
+  const hasToken = containsToken(position, game);
+  let colour = colourForPosition(position, game);
   return (
     <Container rowIndex={props.rowIndex} backgroundColour={colour}>
       {hasToken && <Token />}
